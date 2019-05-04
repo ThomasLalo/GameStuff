@@ -12,7 +12,6 @@ extents = Vector2( 32, 32 )
 [node name="World" type="Node"]
 
 [node name="KinematicBody2D" type="KinematicBody2D" parent="."]
-editor/display_folded = true
 position = Vector2( 928, 448 )
 script = ExtResource( 1 )
 __meta__ = {
@@ -860,3 +859,4 @@ texture = ExtResource( 2 )
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Walls/Wall48"]
 shape = SubResource( 2 )
+
