@@ -53,7 +53,7 @@ func _physics_process(delta):
 		jumpFrameCount += 1
 	
 		# give time for jumpAnticip to run
-	if jumpFrameCount >= 4:
+	if jumpFrameCount >= 20:
 		$Sprite.play("jump")
 		motion.y = JUMP_HEIGHT
 		jumpFlag = false
