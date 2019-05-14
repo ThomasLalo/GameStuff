@@ -7,10 +7,6 @@ const JUMP_HEIGHT = -600
 const MAX_GRAVITY = 3000
 var motion = Vector2()
 
-# jump flag allows for one jump per button press
-# true, means jump avaliable
-var jumpFlag = true 
-
 # counter to allow for implemetation of jumpAnticip
 var jumpFrameCount = 0
 
@@ -48,22 +44,18 @@ func _physics_process(delta):
 		$Sprite.play("idle")
 		
 	#jump
-	if Input.is_action_just_pressed("ui_up") and is_on_floor() and jumpFlag and jumpFrameCount == 0:
+	if Input.is_action_just_pressed("ui_up") and is_on_floor() and jumpFrameCount == 0:
 		$Sprite.play("jumpAnticip")
 		jumpFrameCount += 1
 	
-		# give time for jumpAnticip to run
-	if jumpFrameCount >= 20:
+	# give time for jumpAnticip to run
+	if jumpFrameCount >= 4:
 		$Sprite.play("jump")
 		motion.y = JUMP_HEIGHT
-		jumpFlag = false
 		jumpFrameCount = 0
 	
 	if jumpFrameCount > 0:
 		jumpFrameCount += 1
-	
-	if Input.is_action_just_released("ui_up"):
-		jumpFlag = true
 	
 	# if you are in the air and you've stopped pressing up,
 	# immediately start to fall
@@ -75,7 +67,6 @@ func _physics_process(delta):
 	# if you are in the air and going down
 	if motion.y > 0 and not is_on_floor():
 		$Sprite.play("fall")
-		#jumpFlag = false
 	
 	# update character position based on input from above?
 	motion = move_and_slide(motion, UP)
