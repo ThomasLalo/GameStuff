@@ -9,6 +9,16 @@ var motion = Vector2()
 
 # counter to allow for implemetation of jumpAnticip
 var jumpFrameCount = 0
+var jumpPadding = 4
+var inAirFrames = 0
+
+# counter to smooth out jumping
+var endJumpFrameCount = 0
+var endJumpPadding = 6
+
+var inAirLeftCount = 0
+var inAirRightCount = 0
+
 
 func moveRight():
 	motion.x += SPEED
@@ -41,13 +51,13 @@ func _physics_process(delta):
 	if motion.x == 0 and is_on_floor() and jumpFrameCount == 0:
 		$Sprite.play("idle")
 		
-	#jump
+	#jump initiated
 	if Input.is_action_just_pressed("ui_up") and is_on_floor() and jumpFrameCount == 0:
 		$Sprite.play("jumpAnticip")
 		jumpFrameCount += 1
 	
-	# give time for jumpAnticip to run
-	if jumpFrameCount >= 4:
+	# if frames for jumpAnticip has passed, jump with animation
+	if jumpFrameCount >= jumpPadding:
 		$Sprite.play("jump")
 		motion.y = JUMP_HEIGHT
 		jumpFrameCount = 0
@@ -55,12 +65,52 @@ func _physics_process(delta):
 	if jumpFrameCount > 0:
 		jumpFrameCount += 1
 	
+	if not is_on_floor():
+		inAirFrames += 1
+	
 	# if you are in the air and you've stopped pressing up,
-	# immediately start to fall
-	if not is_on_floor() and not Input.is_action_pressed("ui_up"):
+	# start to fall after frame count has passed
+	if not is_on_floor() and Input.is_action_just_released("ui_up") and endJumpFrameCount == 0:
+		endJumpFrameCount += 1
+			
+	# if frames for jump stop has passed, then fall.
+	if endJumpFrameCount >= endJumpPadding or (inAirFrames > 5 and endJumpFrameCount > 3):
 		if motion.y < 0:
 			motion.y = 0
 			$Sprite.play("fall")
+			endJumpFrameCount = 0
+			
+	if endJumpFrameCount > 0:
+		endJumpFrameCount += 1
+	
+	# pad left movement in air
+	if not is_on_floor() and Input.is_action_just_released("ui_left") and inAirLeftCount == 0:
+		inAirLeftCount = 1
+	
+	if inAirLeftCount > 0:
+		inAirLeftCount += 1
+	
+	if inAirLeftCount < 5 and inAirLeftCount > 0:
+		if not Input.is_action_pressed("ui_left"):
+			moveLeft()
+	
+	# pad right movement in air
+	if not is_on_floor() and Input.is_action_just_released("ui_right") and inAirRightCount == 0:
+		inAirRightCount = 1
+	
+	if inAirRightCount > 0:
+		inAirRightCount += 1
+	
+	if inAirRightCount < 5 and inAirRightCount > 0:
+		if not Input.is_action_pressed("ui_right"):
+			moveRight()
+	
+	# reset in air frames while on floor
+	if is_on_floor():
+		endJumpFrameCount = 0
+		inAirFrames = 0
+		inAirLeftCount = 0
+		inAirRightCount = 0
 	
 	# if you are in the air and going down
 	if motion.y > 0 and not is_on_floor():

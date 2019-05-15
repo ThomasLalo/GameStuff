@@ -6,7 +6,7 @@
 [ext_resource path="res://enemyPirate.tscn" type="PackedScene" id=4]
 
 [sub_resource type="RectangleShape2D" id=1]
-extents = Vector2( 442, 212 )
+extents = Vector2( 678, 100 )
 
 [node name="World" type="Node2D"]
 script = ExtResource( 1 )
@@ -29,7 +29,7 @@ position = Vector2( -429.3, 230 )
 position = Vector2( -1010, 14 )
 
 [node name="DeathBox" type="Area2D" parent="."]
-position = Vector2( -1668, 370 )
+position = Vector2( -1858, 396 )
 gravity = 0.0
 __meta__ = {
 "_edit_group_": true
@@ -37,4 +37,15 @@ __meta__ = {
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="DeathBox"]
 shape = SubResource( 1 )
+
+[node name="DeathBox2" type="Area2D" parent="."]
+position = Vector2( 1818, 444 )
+gravity = 0.0
+__meta__ = {
+"_edit_group_": true
+}
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DeathBox2"]
+shape = SubResource( 1 )
 [connection signal="body_entered" from="DeathBox" to="." method="_on_DeathBox_body_entered"]
+[connection signal="body_entered" from="DeathBox2" to="." method="_on_DeathBox_body_entered"]
