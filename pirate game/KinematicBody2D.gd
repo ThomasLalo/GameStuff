@@ -23,8 +23,6 @@ func _physics_process(delta):
 	# reset horizontal motion on each physics frame for tighter control
 	motion.x = 0
 	
-	print(motion.y)
-	
 	# gravity is ALWAYS pulling character down
 	if motion.y <= MAX_GRAVITY:
 		motion.y += GRAVITY
@@ -68,6 +66,7 @@ func _physics_process(delta):
 	if motion.y > 0 and not is_on_floor():
 		$Sprite.play("fall")
 	
-	# update character position based on input from above?
+	# update character position based on input from above,
+	# will move until a collision is detected
 	motion = move_and_slide(motion, UP)
 	
