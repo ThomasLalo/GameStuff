@@ -24,9 +24,10 @@ visible = false
 position = Vector2( -429.3, 230 )
 
 [node name="enemyPirate" parent="." instance=ExtResource( 4 )]
+position = Vector2( 288, 274 )
 
 [node name="StartPosition" type="Position2D" parent="."]
-position = Vector2( -1010, 14 )
+position = Vector2( 800, 201 )
 
 [node name="DeathBox" type="Area2D" parent="."]
 position = Vector2( -1858, 396 )
@@ -47,5 +48,6 @@ __meta__ = {
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="DeathBox2"]
 shape = SubResource( 1 )
+
 [connection signal="body_entered" from="DeathBox" to="." method="_on_DeathBox_body_entered"]
 [connection signal="body_entered" from="DeathBox2" to="." method="_on_DeathBox_body_entered"]
