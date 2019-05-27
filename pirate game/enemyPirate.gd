@@ -8,25 +8,28 @@ const MAX_GRAVITY = 3000
 var motion = Vector2()
 
 # counter to allow for implemetation of jumpAnticip
-var jumpFrameCount = 0
-const JUMP_PADDING = 4  # I changed this to a const for to make the code more readable for my own sake
+var anticipFrameCount = 0
+const ANTICIP_PADDING = 4 # I changed this to a const for to make the code more readable for my own sake
 var inAirFrames = 0
 
 # counter to smooth out jumping
-var endJumpFrameCount = 0
-const END_JUMP_PADDING = 6
+var hangTimeCount = 0
+const MAX_HANG_TIME = 50
 
-var inAirLeftCount = 0
-var inAirRightCount = 0
+# ray casting flags and management NPC SPECIFIC
+onready var visionRay = get_node("VisionRay")
+var visionRight = Vector2(64,0)
+var visionLeft = Vector2(-64,0)
+var visionRayCollider = ""
+var wallIncoming = false
 
-
-# enemy Patrolling counters and flags
+# enemy Patrolling counters and flags NPC SPECIFIC
 var patrolMoveCount = 0
-const FULL_MOVE_FRAMES = 208 # run the run animation loop 16 times
+const FULL_MOVE_FRAMES = 208 # run the run animation loop 16 times - DOESN'T WORK
 const HALF_MOVE_FRAMES = 104
 
 var patrolIdleCount = 0
-const FULL_IDLE_FRAMES = 132 # run the idle animation loop 2 times
+const FULL_IDLE_FRAMES = 132 # run the idle animation loop 4 times - DOESN'T WORK
 const HALF_IDLE_FRAMES = 66
 
 var partolFlag = true
@@ -48,14 +51,18 @@ var patrolSequence = 0
 # 6 = 66 idle frames
 ###----------------------------------------------------------------###
 
+func _ready():
+	visionRay.set_enabled(true)
 
 func moveRight():
 	motion.x += SPEED
 	$Sprite.flip_h = false
+	visionRay.set_cast_to(visionRight)
 
 func moveLeft():
 	motion.x += -SPEED
 	$Sprite.flip_h = true
+	visionRay.set_cast_to(visionLeft)
 
 func _physics_process(delta):
 	
@@ -85,7 +92,6 @@ func _physics_process(delta):
 				else:
 					patrolMoveCount = 0
 					patrolSequence = 2
-
 			2:
 				if patrolIdleCount <= HALF_IDLE_FRAMES:
 					$Sprite.play("idle")
@@ -93,7 +99,6 @@ func _physics_process(delta):
 				else:
 					patrolIdleCount = 0
 					patrolSequence = 3
-
 			3:
 				if patrolMoveCount <= FULL_MOVE_FRAMES:
 					moveLeft()
@@ -126,74 +131,64 @@ func _physics_process(delta):
 				else:
 					patrolIdleCount = 0
 					patrolSequence = 3
-
-
-
-		
-	""" #jump initiated
-	if Input.is_action_just_pressed("ui_up") and is_on_floor() and jumpFrameCount == 0:
-		$Sprite.play("jumpAnticip")
-		jumpFrameCount += 1
 	
+	#raycasting management
+	if visionRay.is_colliding():
+		visionRayCollider = visionRay.get_collider().get_class()
+	else:
+		visionRayCollider = ""
+
+	if visionRayCollider == "KinematicBody2D":
+			print("Yes") #looking at player
+	
+	elif visionRayCollider == "TileMap":
+		wallIncoming = true
+		print(wallIncoming)
+
+	else:
+		wallIncoming = false
+		print(wallIncoming)
+		
+	#jump initiated
+	if wallIncoming and is_on_floor() and anticipFrameCount == 0:
+		$Sprite.play("jumpAnticip")
+		anticipFrameCount = 1 #this only starts the counter, runs only once per jump
+
+	if anticipFrameCount > 0:
+		anticipFrameCount += 1
+		
 	# if frames for jumpAnticip has passed, jump with animation
-	if jumpFrameCount >= JUMP_PADDING:
+	if anticipFrameCount >= ANTICIP_PADDING:
 		$Sprite.play("jump")
 		motion.y = JUMP_HEIGHT
-		jumpFrameCount = 0
-	
-	if jumpFrameCount > 0:
-		jumpFrameCount += 1
+		anticipFrameCount = 0
 	
 	if not is_on_floor():
 		inAirFrames += 1
 	
 	# if you are in the air and you've stopped pressing up,
 	# start to fall after frame count has passed
-	if not is_on_floor() and Input.is_action_just_released("ui_up") and endJumpFrameCount == 0:
-		endJumpFrameCount += 1
-			
+	if not is_on_floor() and not wallIncoming and hangTimeCount == 0:
+		hangTimeCount = 1 #this only starts the counter, runs only once per jump
+
+	if hangTimeCount > 0:
+		hangTimeCount += 1
+
 	# if frames for jump stop has passed, then fall.
-	if endJumpFrameCount >= END_JUMP_PADDING or (inAirFrames > 5 and endJumpFrameCount > 3):
+	if hangTimeCount >= MAX_HANG_TIME:
 		if motion.y < 0:
 			motion.y = 0
 			$Sprite.play("fall")
-			endJumpFrameCount = 0
-			
-	if endJumpFrameCount > 0:
-		endJumpFrameCount += 1
-	
-	# pad left movement in air
-	if not is_on_floor() and Input.is_action_just_released("ui_left") and inAirLeftCount == 0:
-		inAirLeftCount = 1
-	
-	if inAirLeftCount > 0:
-		inAirLeftCount += 1
-	
-	if inAirLeftCount < 5 and inAirLeftCount > 0:
-		if not Input.is_action_pressed("ui_left"):
-			moveLeft()
-	
-	# pad right movement in air
-	if not is_on_floor() and Input.is_action_just_released("ui_right") and inAirRightCount == 0:
-		inAirRightCount = 1
-	
-	if inAirRightCount > 0:
-		inAirRightCount += 1
-	
-	if inAirRightCount < 5 and inAirRightCount > 0:
-		if not Input.is_action_pressed("ui_right"):
-			moveRight()
-	
+			hangTimeCount = 0
+
 	# reset in air frames while on floor
 	if is_on_floor():
-		endJumpFrameCount = 0
+		hangTimeCount = 0
 		inAirFrames = 0
-		inAirLeftCount = 0
-		inAirRightCount = 0
-	
+
 	# if you are in the air and going down
 	if motion.y > 0 and not is_on_floor():
-		$Sprite.play("fall") """
+		$Sprite.play("fall")
 	
 	# update character position based on input from above,
 	# will move until a collision is detected
